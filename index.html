@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书馆借阅管理系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="loginContainer" class="login-container" style="display: none;">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-book-open"></i>
+                <h1>图书馆管理系统</h1>
+                <p>请选择您的身份并登录</p>
+            </div>
+            
+            <div class="role-selection">
+                <button class="role-btn" onclick="selectRole('reader')">
+                    <i class="fas fa-user"></i>
+                    <span>读者登录</span>
+                </button>
+                <button class="role-btn" onclick="selectRole('admin')">
+                    <i class="fas fa-user-shield"></i>
+                    <span>管理员登录</span>
+                </button>
+            </div>
+            
+            <div id="loginForm" class="login-form" style="display: none;">
+                <div class="form-group">
+                    <label id="usernameLabel">用户名：</label>
+                    <input type="text" id="userName" class="form-input" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码：</label>
+                    <input type="password" id="userPassword" class="form-input" placeholder="请输入密码">
+                </div>
+                <button class="btn btn-primary login-btn" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i> 登录
+                </button>
+                <button class="btn btn-secondary register-btn" onclick="showRegisterForm()" id="registerBtn" style="display: none;">
+                    <i class="fas fa-user-plus"></i> 注册
+                </button>
+                <button class="btn btn-secondary back-btn" onclick="showRoleSelection()">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册界面 -->
+    <div id="registerContainer" class="login-container" style="display: none;">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-user-plus"></i>
+                <h1>用户注册</h1>
+                <p>请填写注册信息</p>
+            </div>
+            
+            <div id="registerForm" class="login-form">
+                <div class="form-group">
+                    <label>用户名：</label>
+                    <input type="text" id="regUsername" class="form-input" placeholder="请输入用户名（3-20位字符）">
+                </div>
+                <div class="form-group">
+                    <label>密码：</label>
+                    <input type="password" id="regPassword" class="form-input" placeholder="请输入密码（至少6位）">
+                </div>
+                <div class="form-group">
+                    <label>确认密码：</label>
+                    <input type="password" id="regConfirmPassword" class="form-input" placeholder="请再次输入密码">
+                </div>
+                <div class="form-group">
+                    <label>姓名：</label>
+                    <input type="text" id="regName" class="form-input" placeholder="请输入真实姓名">
+                </div>
+                <div class="form-group">
+                    <label>邮箱：</label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="请输入邮箱地址">
+                </div>
+                <div class="form-group">
+                    <label>手机号：</label>
+                    <input type="tel" id="regPhone" class="form-input" placeholder="请输入手机号码">
+                </div>
+                <div class="form-group">
+                    <label>地址：</label>
+                    <input type="text" id="regAddress" class="form-input" placeholder="请输入地址（可选）">
+                </div>
+                <button class="btn btn-primary register-submit-btn" onclick="register()">
+                    <i class="fas fa-user-plus"></i> 注册
+                </button>
+                <button class="btn btn-secondary back-to-login-btn" onclick="backToLogin()">
+                    <i class="fas fa-arrow-left"></i> 返回登录
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainContainer" class="container" style="display: none;">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-book-open"></i>
+                <span>图书馆管理系统</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn active" data-tab="books">
+                    <i class="fas fa-books"></i> 图书管理
+                </button>
+                <button class="nav-btn" data-tab="categories" id="categoriesTab">
+                    <i class="fas fa-tags"></i> 分类管理
+                </button>
+                <button class="nav-btn" data-tab="users" id="usersTab">
+                    <i class="fas fa-users"></i> 用户管理
+                </button>
+                <button class="nav-btn" data-tab="borrow">
+                    <i class="fas fa-handshake"></i> 借阅管理
+                </button>
+                <button class="nav-btn" data-tab="search">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+            <div class="nav-right">
+                <span id="currentUser" class="user-info"></span>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> 退出
+                </button>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 图书管理页面 -->
+            <div id="books" class="tab-content active">
+                <div class="page-header">
+                    <h2><i class="fas fa-books"></i> 图书管理</h2>
+                    <button class="btn btn-primary" id="addBookBtn" onclick="showAddBookModal()">
+                        <i class="fas fa-plus"></i> 添加图书
+                    </button>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" id="bookSearch" placeholder="搜索图书..." class="search-input">
+                    <button class="search-btn" onclick="searchBooks()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>图书编号</th>
+                                <th>书名</th>
+                                <th>作者</th>
+                                <th>出版社</th>
+                                <th>ISBN</th>
+                                <th>出版年份</th>
+                                <th>分类</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksTableBody">
+                            <!-- 图书数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 用户管理页面 -->
+            <div id="users" class="tab-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-users"></i> 用户管理</h2>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="userSearch" placeholder="搜索用户..." class="search-input">
+                    <button class="search-btn" onclick="searchUsers()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用户ID</th>
+                                <th>姓名</th>
+                                <th>邮箱</th>
+                                <th>电话</th>
+                                <th>注册时间</th>
+                                <th>状态</th>
+                                <th>当前借阅</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- 用户数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 分类管理页面 -->
+            <div id="categories" class="tab-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-tags"></i> 分类管理</h2>
+                    <button class="btn btn-primary" id="addCategoryBtn" onclick="showAddCategoryModal()">
+                        <i class="fas fa-plus"></i> 添加分类
+                    </button>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="categorySearch" placeholder="搜索分类..." class="search-input">
+                    <button class="search-btn" onclick="searchCategories()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>分类ID</th>
+                                <th>分类名称</th>
+                                <th>描述</th>
+                                <th>图书数量</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <!-- 分类数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 借阅管理页面 -->
+            <div id="borrow" class="tab-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-handshake"></i> 借阅管理</h2>
+                    <div class="header-buttons">
+                        <button class="btn btn-success" onclick="showBorrowModal()">
+                            <i class="fas fa-book"></i> 借书
+                        </button>
+                        <button class="btn btn-warning" onclick="showReturnModal()">
+                            <i class="fas fa-undo"></i> 还书
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalBooks">0</h3>
+                            <p>总图书数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalUsers">0</h3>
+                            <p>总用户数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="borrowedBooks">0</h3>
+                            <p>已借出</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="overdueBooks">0</h3>
+                            <p>逾期未还</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>借阅ID</th>
+                                <th>用户姓名</th>
+                                <th>图书名称</th>
+                                <th>借阅日期</th>
+                                <th>应还日期</th>
+                                <th>实际归还日期</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="borrowTableBody">
+                            <!-- 借阅数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 搜索页面 -->
+            <div id="search" class="tab-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-search"></i> 高级搜索</h2>
+                </div>
+
+                <div class="search-panel">
+                    <div class="search-filters">
+                        <div class="filter-group">
+                            <label>搜索类型：</label>
+                            <select id="searchType" class="form-select">
+                                <option value="books">图书</option>
+                                <option value="categories">分类</option>
+                                <option value="users">用户</option>
+                                <option value="borrow">借阅记录</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>关键词：</label>
+                            <input type="text" id="searchKeyword" class="form-input" placeholder="输入搜索关键词">
+                        </div>
+                        <div class="filter-group" id="categoryFilterGroup">
+                            <label>分类：</label>
+                            <select id="searchCategory" class="form-select">
+                                <option value="">全部分类</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>状态：</label>
+                            <select id="searchStatus" class="form-select">
+                                <option value="">全部</option>
+                                <option value="available">可借</option>
+                                <option value="borrowed">已借出</option>
+                                <option value="overdue">逾期</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="advancedSearch()">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+
+                <div class="search-results" id="searchResults">
+                    <div class="search-welcome">
+                        <div class="welcome-icon">🔍</div>
+                        <h3>高级搜索</h3>
+                        <p>选择搜索类型，输入关键词，即可快速找到您需要的信息。支持图书、分类、用户和借阅记录的全面搜索。</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模态框 -->
+    <!-- 添加图书模态框 -->
+    <div id="addBookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加图书</h3>
+                <span class="close" onclick="closeModal('addBookModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addBookForm">
+                    <div class="form-group">
+                        <label>书名：</label>
+                        <input type="text" id="bookTitle" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>作者：</label>
+                        <input type="text" id="bookAuthor" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>出版社：</label>
+                        <input type="text" id="bookPublisher" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>ISBN：</label>
+                        <input type="text" id="bookISBN" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>出版年份：</label>
+                        <input type="number" id="bookYear" min="1900" max="2024" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>分类：</label>
+                        <select id="bookCategory" class="form-select">
+                            <!-- 分类选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>图书描述：</label>
+                        <textarea id="bookDescription" class="form-textarea" placeholder="请输入图书描述..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addBookModal')">取消</button>
+                <button class="btn btn-primary" onclick="addBook()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 借书模态框 -->
+    <div id="borrowModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>借书</h3>
+                <span class="close" onclick="closeModal('borrowModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="borrowForm">
+                    <div class="form-group">
+                        <label>用户：</label>
+                        <select id="borrowUserId" required class="form-select">
+                            <!-- 用户选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>图书：</label>
+                        <select id="borrowBookId" required class="form-select">
+                            <!-- 图书选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('borrowModal')">取消</button>
+                <button class="btn btn-primary" onclick="borrowBook()">借书</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 还书模态框 -->
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>还书</h3>
+                <span class="close" onclick="closeModal('returnModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="returnForm">
+                    <div class="form-group">
+                        <label>用户：</label>
+                        <select id="returnUserId" required class="form-select">
+                            <!-- 用户选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>图书：</label>
+                        <select id="returnBookId" required class="form-select">
+                            <!-- 图书选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('returnModal')">取消</button>
+                <button class="btn btn-primary" onclick="returnBook()">还书</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加分类模态框 -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加分类</h3>
+                <span class="close" onclick="closeModal('addCategoryModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="form-group">
+                        <label>分类名称：</label>
+                        <input type="text" id="categoryName" required class="form-input" placeholder="请输入分类名称">
+                    </div>
+                    <div class="form-group">
+                        <label>描述：</label>
+                        <textarea id="categoryDescription" class="form-textarea" placeholder="请输入分类描述"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addCategoryModal')">取消</button>
+                <button class="btn btn-primary" onclick="addCategory()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图书详情和评价模态框 -->
+    <div id="bookDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="bookDetailTitle">图书详情</h3>
+                <span class="close" onclick="closeModal('bookDetailModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="bookDetailInfo">
+                    <!-- 图书详细信息将在这里显示 -->
+                </div>
+                
+                <div class="book-rating-section">
+                    <h4><i class="fas fa-star"></i> 图书评价</h4>
+                    <div id="bookRatingInfo">
+                        <!-- 评分信息将在这里显示 -->
+                    </div>
+                    
+                    <div class="add-review-section" id="addReviewSection">
+                        <h5>添加评价</h5>
+                        <form id="addReviewForm">
+                            <div class="form-group">
+                                <label>评分：</label>
+                                <div class="rating-input">
+                                    <input type="radio" name="rating" value="1" id="star1">
+                                    <label for="star1"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="rating" value="2" id="star2">
+                                    <label for="star2"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="rating" value="3" id="star3">
+                                    <label for="star3"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="rating" value="4" id="star4">
+                                    <label for="star4"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="rating" value="5" id="star5">
+                                    <label for="star5"><i class="fas fa-star"></i></label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>评价内容：</label>
+                                <textarea id="reviewText" class="form-textarea" placeholder="请输入您的评价..."></textarea>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="addBookReview()">
+                                <i class="fas fa-plus"></i> 添加评价
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="reviews-list" id="reviewsList">
+                        <!-- 评价列表将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('bookDetailModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

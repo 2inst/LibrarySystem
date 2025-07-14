@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试</title>
+</head>
+<body>
+    <h1>API测试页面</h1>
+    
+    <div>
+        <h2>测试搜索图书</h2>
+        <input type="text" id="searchInput" placeholder="输入搜索关键词">
+        <button onclick="testSearch()">搜索</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 测试API调用
+        async function testSearch() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            const resultsDiv = document.getElementById('results');
+            
+            if (!keyword) {
+                resultsDiv.innerHTML = '<p style="color: red;">请输入搜索关键词</p>';
+                return;
+            }
+            
+            try {
+                resultsDiv.innerHTML = '<p>搜索中...</p>';
+                
+                // 直接调用API
+                const response = await fetch(`/api/search/books?keyword=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP错误: ${response.status}`);
+                }
+                
+                console.log('搜索结果:', data);
+                
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>没有找到匹配的图书</p>';
+                } else {
+                    let html = '<h3>搜索结果:</h3><ul>';
+                    data.forEach(book => {
+                        html += `<li>${book.title} - ${book.author}</li>`;
+                    });
+                    html += '</ul>';
+                    resultsDiv.innerHTML = html;
+                }
+                
+            } catch (error) {
+                console.error('搜索失败:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">搜索失败: ${error.message}</p>`;
+            }
+        }
+        
+        // 测试获取所有图书
+        async function testGetAllBooks() {
+            try {
+                const response = await fetch('/api/books');
+                const data = await response.json();
+                console.log('所有图书:', data);
+                return data;
+            } catch (error) {
+                console.error('获取图书失败:', error);
+            }
+        }
+        
+        // 页面加载时测试获取所有图书
+        window.addEventListener('load', () => {
+            testGetAllBooks();
+        });
+    </script>
+</body>
+</html>
