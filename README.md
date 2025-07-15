@@ -314,13 +314,5 @@ library_system_test/b/
 - **架构模式**: MVC
 - **API风格**: RESTful
 
-## 📞 联系方式
-
-如有问题或建议，请通过以下方式联系：
-
-- 📧 Email: [your-email@example.com]
-- 💬 Issues: [项目Issues页面]
-
----
 
 *最后更新时间：2025年7月14日*
